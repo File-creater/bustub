@@ -38,6 +38,7 @@ class ExtendibleHashTable : public HashTable<K, V> {
   /**
    *
    * TODO(P1): Add implementation
+   * Note : finished.
    *
    * @brief Create a new ExtendibleHashTable.
    * @param bucket_size: fixed size for each bucket
@@ -66,6 +67,7 @@ class ExtendibleHashTable : public HashTable<K, V> {
   /**
    *
    * TODO(P1): Add implementation
+   * Note : finished.
    *
    * @brief Find the value associated with the given key.
    *
@@ -97,6 +99,7 @@ class ExtendibleHashTable : public HashTable<K, V> {
   /**
    *
    * TODO(P1): Add implementation
+   * Note : finished
    *
    * @brief Given the key, remove the corresponding key-value pair in the hash table.
    * Shrink & Combination is not required for this project
@@ -126,6 +129,7 @@ class ExtendibleHashTable : public HashTable<K, V> {
     /**
      *
      * TODO(P1): Add implementation
+     * Note : finished in .cpp
      *
      * @brief Find the value associated with the given key in the bucket.
      * @param key The key to be searched.
@@ -137,6 +141,7 @@ class ExtendibleHashTable : public HashTable<K, V> {
     /**
      *
      * TODO(P1): Add implementation
+     * Note : finished in .cpp .
      *
      * @brief Given the key, remove the corresponding key-value pair in the bucket.
      * @param key The key to be deleted.
@@ -192,6 +197,8 @@ class ExtendibleHashTable : public HashTable<K, V> {
    * @return The entry index in the directory.
    */
   auto IndexOf(const K &key) -> size_t;
+
+  auto InsertInternal(const K &key, const V &value) -> void;
 
   auto GetGlobalDepthInternal() const -> int;
   auto GetLocalDepthInternal(int dir_index) const -> int;
