@@ -177,5 +177,7 @@ class BufferPoolManagerInstance : public BufferPoolManager {
   }
 
   // TODO(student): You may add additional private members and helper functions
+
+  auto GetNewPage(page_id_t page_id) -> page_id_t;
 };
 }  // namespace bustub

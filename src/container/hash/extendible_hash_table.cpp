@@ -91,74 +91,55 @@ auto ExtendibleHashTable<K, V>::Remove(const K &key) -> bool {
 }
 
 template <typename K, typename V>
-auto ExtendibleHashTable<K, V>::RedistributeBucket(std::shared_ptr<Bucket> bucket) -> void {
-  auto &ori_list = bucket->GetItems();
-
-  auto tmp_list = ori_list;
-
-  ori_list.clear();
-
-  for (const auto &p : tmp_list) {
-    auto this_key = p.first;
-    auto this_value = p.second;
-    InsertInternal(this_key, this_value);
-  }
-}
+auto ExtendibleHashTable<K, V>::RedistributeBucket(std::shared_ptr<Bucket> bucket) -> void {}
 
 template <typename K, typename V>
 void ExtendibleHashTable<K, V>::InsertInternal(const K &key, const V &value) {
-  auto index = IndexOf(key);
+  while (dir_[IndexOf(key)]->IsFull()) {
+    auto index = IndexOf(key);
+    auto target_bucket = dir_[index];
 
-  // std::cout << "insert key(" << key << ") and its index is " << index << std::endl;
-
-  V tmp_v;
-
-  if (dir_[index]->Find(key, tmp_v)) {  // exist
-    if (!dir_[index]->Insert(key, value)) {
-      LOG_DEBUG("impossible way : key/value pair exists but update failed!");
-      return;
-    }
-
-    return;
-  }
-
-  // not exist, try insert
-
-  if (dir_[index]->IsFull()) {
-    if (dir_[index]->GetDepth() == global_depth_) {
+    if (target_bucket->GetDepth() == global_depth_) {
       global_depth_++;
 
-      for (int i = 0; i < num_buckets_; i++) {
+      int capacity = dir_.size();
+
+      for (int i = 0; i < capacity; i++) {
         dir_.push_back(dir_[i]);
       }
-
-      num_buckets_ = dir_.size();
     }
 
-    dir_[index]->IncrementDepth();
+    num_buckets_++;
 
-    // 原来的满的bucket
-    auto full_bucket = dir_[index];
+    int mask = 1 << target_bucket->GetDepth();
 
-    // 新bucket的索引入口
-    auto new_index = IndexOf(key);
-
-    // 分配新指针到新的bucket
-    // TODO(liangyao): ：这里可能有多个兄弟指针，或许需要优化
-    dir_[new_index] = std::make_shared<Bucket>(bucket_size_, full_bucket->GetDepth());
-
-    // std::cout << "start RedistributeBucket " << index << std::endl;
+    auto bucket_0 = std::make_shared<Bucket>(bucket_size_, target_bucket->GetDepth() + 1);
+    auto bucket_1 = std::make_shared<Bucket>(bucket_size_, target_bucket->GetDepth() + 1);
 
     // 分配原来的bucket中的kv
-    RedistributeBucket(full_bucket);
-    // std::cout << "end RedistributeBucket " << index << std::endl;
-
-    InsertInternal(key, value);
-
-  } else {
-    if (!dir_[index]->Insert(key, value)) {
-      LOG_DEBUG("not full but insert failed");
+    for (const auto &item : target_bucket->GetItems()) {
+      size_t hash_key = std::hash<K>()(item.first);
+      if ((hash_key & mask) != 0U) {
+        bucket_1->Insert(item.first, item.second);
+      } else {
+        bucket_0->Insert(item.first, item.second);
+      }
     }
+    // 分配新指针到新的bucket
+    for (size_t i = 0; i < dir_.size(); i++) {
+      if (dir_[i] == target_bucket) {
+        if ((i & mask) != 0U) {
+          dir_[i] = bucket_1;
+        } else {
+          dir_[i] = bucket_0;
+        }
+      }
+    }
+  }
+
+  auto index = IndexOf(key);
+  if (!dir_[index]->Insert(key, value)) {
+    LOG_DEBUG("not full but insert failed");
   }
 }
 
@@ -219,13 +200,13 @@ auto ExtendibleHashTable<K, V>::Bucket::Insert(const K &key, const V &value) -> 
     if (p.first == key) {
       p.second = value;  // update value
 
-      std::cout << "target k/v exists\n";
+      // std::cout << "target k/v exists\n";
       return false;
     }
   }
 
   if (IsFull()) {  // full
-    std::cout << "bucket is full\n";
+    // std::cout << "bucket is full\n";
     return false;
   }
 

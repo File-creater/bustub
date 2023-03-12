@@ -140,20 +140,20 @@ class LRUKReplacer {
  private:
   void RemoveInternal(frame_id_t frame_id);
 
-  struct Node {
-    frame_id_t frame_id_;
-    bool evictable_;
-    size_t access_count_;
+  // struct Node {
+  //   frame_id_t frame_id_;
+  //   bool evictable_;
+  //   size_t access_count_;
 
-    explicit Node(frame_id_t frame_id, size_t access_count = 1, bool evictable = false) {
-      frame_id_ = frame_id;
-      evictable_ = evictable;
-      access_count_ = access_count;
-    }
-  };
+  //   explicit Node(frame_id_t frame_id, size_t access_count = 1, bool evictable = false) {
+  //     frame_id_ = frame_id;
+  //     evictable_ = evictable;
+  //     access_count_ = access_count;
+  //   }
+  // };
 
-  std::list<Node> inf_list_, countable_list_;
-  std::unordered_map<frame_id_t, std::list<Node>::iterator> hash_;
+  // std::list<Node> inf_list_, countable_list_;
+  // std::unordered_map<frame_id_t, std::list<Node>::iterator> hash_;
 
   // TODO(student): implement me! You can replace these member variables as you like.
   // Remove maybe_unused if you start using them.
@@ -162,6 +162,16 @@ class LRUKReplacer {
   size_t replacer_size_;
   size_t k_;
   std::mutex latch_;
+
+  std::unordered_map<frame_id_t, size_t> access_count_;
+
+  std::list<frame_id_t> history_list_;
+  std::unordered_map<frame_id_t, std::list<frame_id_t>::iterator> history_map_;
+
+  std::list<frame_id_t> cache_list_;
+  std::unordered_map<frame_id_t, std::list<frame_id_t>::iterator> cache_map_;
+
+  std::unordered_map<frame_id_t, bool> is_evictable_;
 };
 
 }  // namespace bustub
